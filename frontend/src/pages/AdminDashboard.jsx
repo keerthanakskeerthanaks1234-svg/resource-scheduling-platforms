@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Server, Users, ListTodo, FileText, BarChart2,
   Bell, RefreshCw, CheckCircle, XCircle, AlertTriangle, Wifi, WifiOff,
   Battery, Cpu, Database, Activity, Clock, Trash2, UserX, UserCheck,
-  Ban, Play, Square, Shield, Eye
+  Ban, Play, Square, Shield, Eye, HardDrive, PauseCircle, PlayCircle
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -14,6 +14,7 @@ import {
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'nodes', label: 'Nodes', icon: Server },
+  { id: 'resources', label: 'Resources', icon: HardDrive },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
   { id: 'logs', label: 'Logs', icon: FileText },
@@ -30,6 +31,7 @@ const StatusBadge = ({ status }) => {
     running: 'bg-blue-50 text-blue-700 border-blue-200',
     failed: 'bg-rose-50 text-rose-700 border-rose-200',
     pending: 'bg-slate-50 text-slate-600 border-slate-200',
+    stopped: 'bg-slate-100 text-slate-600 border-slate-300',
     admin: 'bg-purple-50 text-purple-700 border-purple-200',
     seller: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     buyer: 'bg-teal-50 text-teal-700 border-teal-200',
@@ -88,6 +90,7 @@ export default function AdminDashboard({ authFetch }) {
   const [nodes, setNodes] = useState([]);
   const [users, setUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [resources, setResources] = useState([]);
   const [logs, setLogs] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -129,6 +132,11 @@ export default function AdminDashboard({ authFetch }) {
     catch (e) { showToast(e.message, 'error'); }
   }, [api]);
 
+  const loadResources = useCallback(async () => {
+    try { setResources(await api('/api/admin/resources')); }
+    catch (e) { showToast(e.message, 'error'); }
+  }, [api]);
+
   const loadLogs = useCallback(async () => {
     const params = new URLSearchParams();
     if (logFilter.level) params.set('level', logFilter.level);
@@ -153,12 +161,13 @@ export default function AdminDashboard({ authFetch }) {
     try {
       await loadDashboard();
       if (tab === 'nodes') await loadNodes();
+      else if (tab === 'resources') await loadResources();
       else if (tab === 'users') await loadUsers();
       else if (tab === 'tasks') await loadTasks();
       else if (tab === 'logs') await loadLogs();
       else if (tab === 'analytics') await loadAnalytics();
     } finally { setLoading(false); }
-  }, [tab, loadDashboard, loadNodes, loadUsers, loadTasks, loadLogs, loadAnalytics]);
+  }, [tab, loadDashboard, loadNodes, loadResources, loadUsers, loadTasks, loadLogs, loadAnalytics]);
 
   useEffect(() => {
     loadDashboard();
@@ -166,6 +175,7 @@ export default function AdminDashboard({ authFetch }) {
 
   useEffect(() => {
     if (tab === 'nodes') loadNodes();
+    else if (tab === 'resources') loadResources();
     else if (tab === 'users') loadUsers();
     else if (tab === 'tasks') loadTasks();
     else if (tab === 'logs') loadLogs();
@@ -197,6 +207,15 @@ export default function AdminDashboard({ authFetch }) {
       await api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       showToast(successMsg);
       await loadTasks();
+    } catch (e) { showToast(e.message, 'error'); }
+  };
+
+  const resourceAction = async (url, opts, successMsg, reload = loadResources) => {
+    try {
+      await api(url, opts);
+      showToast(successMsg);
+      await reload();
+      await loadDashboard();
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -290,6 +309,10 @@ export default function AdminDashboard({ authFetch }) {
                 <StatCard label="Failed Tasks" value={dashboard.failedTasks} icon={XCircle} color="text-rose-600" bg="bg-rose-50" />
                 <StatCard label="Running Tasks" value={dashboard.runningTasks} icon={Activity} color="text-blue-600" bg="bg-blue-50" />
                 <StatCard label="Pending Tasks" value={dashboard.pendingTasks} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatCard label="Seller Listings (Available)" value={dashboard.availableResources ?? 0} icon={HardDrive} color="text-indigo-600" bg="bg-indigo-50" sub="Shown in Request Resources" />
+                <StatCard label="Seller Listings (Stopped)" value={dashboard.stoppedResources ?? 0} icon={PauseCircle} color="text-slate-600" bg="bg-slate-100" sub="Hidden from buyers" />
               </div>
 
               {/* Alerts */}
@@ -404,6 +427,79 @@ export default function AdminDashboard({ authFetch }) {
                               <ActionButton label="Offline" Icon={WifiOff} variant="warn"
                                 disabled={n.status === 'offline'}
                                 onClick={() => nodeAction('/api/admin/node/offline', { nodeId: n._id }, `Node ${n.hostname} marked offline`)} />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── RESOURCES (seller listings) ─── */}
+          {tab === 'resources' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-semibold text-slate-800 flex items-center gap-2"><HardDrive className="w-4 h-4 text-indigo-500" /> Seller shared resources</h3>
+                <span className="text-xs text-slate-500">{resources.length} total</span>
+              </div>
+              {resources.length === 0 ? (
+                <div className="py-20 text-center text-slate-400 text-sm">No seller listings yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Seller', 'CPU', 'RAM', 'Battery', 'Status', 'Active tasks', 'Created', 'Actions'].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {resources.map(r => (
+                        <tr key={r._id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="font-medium text-slate-800">{r.user?.name || '—'}</span>
+                            <br /><span className="text-xs text-slate-400">{r.user?.email || ''}</span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{r.cpu}</td>
+                          <td className="px-4 py-3 text-slate-600">{r.ram} GB</td>
+                          <td className="px-4 py-3 text-slate-600">{r.battery}%</td>
+                          <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
+                          <td className="px-4 py-3 text-slate-500 text-xs">
+                            {(r.activeTasks?.length || 0) === 0 ? '—' : r.activeTasks.map(t => `${String(t._id).slice(-6)} (${t.status})`).join(', ')}
+                          </td>
+                          <td className="px-4 py-3 text-slate-400 text-xs">{new Date(r.createdAt).toLocaleString()}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-1 flex-wrap">
+                              {r.status === 'available' && (
+                                <ActionButton label="Stop sharing" Icon={PauseCircle} variant="danger"
+                                  onClick={() => {
+                                    const reason = window.prompt('Reason (optional):', 'Task completed / admin review') ?? '';
+                                    resourceAction('/api/admin/resource/stop', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ resourceId: r._id, reason: reason || undefined }),
+                                    }, 'Sharing stopped for this listing');
+                                  }} />
+                              )}
+                              {r.status === 'stopped' && (
+                                <ActionButton label="Resume" Icon={PlayCircle} variant="success"
+                                  onClick={() => resourceAction('/api/admin/resource/resume', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ resourceId: r._id }),
+                                  }, 'Listing visible to buyers again')} />
+                              )}
+                              <ActionButton label="Delete" Icon={Trash2} variant="danger"
+                                disabled={r.status === 'busy'}
+                                onClick={() => {
+                                  if (confirm(`Delete this listing (${r.ram} GB RAM)? Cannot be undone.`)) {
+                                    resourceAction(`/api/admin/resource/${r._id}`, { method: 'DELETE' }, 'Listing deleted');
+                                  }
+                                }} />
                             </div>
                           </td>
                         </tr>
@@ -548,6 +644,7 @@ export default function AdminDashboard({ authFetch }) {
                   <option value="node">Node</option>
                   <option value="auth">Auth</option>
                   <option value="system">System</option>
+                  <option value="resource">Resource</option>
                   <option value="error">Error</option>
                 </select>
                 <span className="ml-auto text-xs text-slate-500">{logs.length} entries</span>

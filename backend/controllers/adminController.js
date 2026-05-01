@@ -29,6 +29,7 @@ exports.getDashboard = async (req, res) => {
       availableNodes, busyNodes, offlineNodes,
       runningTasks, completedTasks, failedTasks, pendingTasks,
       recentTasks, lowBatteryNodes, recentLogs,
+      stoppedResources, availableResources, recentStoppedResources,
     ] = await Promise.all([
       User.countDocuments(),
       Resource.countDocuments(),
@@ -46,6 +47,9 @@ exports.getDashboard = async (req, res) => {
         .populate("assignedNode", "hostname").lean(),
       Node.find({ "battery.percent": { $lt: 15 }, status: { $ne: "offline" } }).lean(),
       Log.find().sort({ createdAt: -1 }).limit(20).lean(),
+      Resource.countDocuments({ status: "stopped" }),
+      Resource.countDocuments({ status: "available" }),
+      Resource.find({ status: "stopped" }).sort({ updatedAt: -1 }).limit(5).populate("user", "name email").lean(),
     ]);
 
     const alerts = [];
@@ -65,11 +69,20 @@ exports.getDashboard = async (req, res) => {
       ts: t.updatedAt,
     }));
 
+    recentStoppedResources.forEach(r => alerts.push({
+      type: "resource_stopped",
+      level: "warn",
+      message: `Seller listing stopped (RAM ${r.ram} GB) — ${r.user?.email || "unknown"}`,
+      resourceId: String(r._id),
+      ts: r.updatedAt,
+    }));
+
     return res.json({
       totalUsers, totalResources, totalTasks, totalNodes,
       availableNodes, busyNodes, offlineNodes,
       runningTasks, completedTasks, failedTasks, pendingTasks,
       recentTasks, alerts, recentLogs,
+      stoppedResources, availableResources, recentStoppedResources,
     });
   } catch (err) {
     console.error("admin dashboard error:", err);
@@ -180,6 +193,92 @@ exports.changeUserRole = async (req, res) => {
     if (!user) return res.status(404).json({ msg: "User not found" });
     await addLog("info", "auth", `Admin changed ${user.email} role to ${role}`, { userId, role });
     return res.json({ msg: "Role updated", user });
+  } catch {
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.getAllResources = async (req, res) => {
+  try {
+    const resources = await Resource.find().sort({ createdAt: -1 }).populate("user", "name email").populate("stoppedBy", "name email").lean();
+    const ids = resources.map(r => r._id);
+    const activeTasks = await Task.find({
+      assignedResource: { $in: ids },
+      status: { $in: ["running", "pending"] },
+    }).select("_id status assignedResource buyer requiredRam").populate("buyer", "name email").lean();
+    const byResource = new Map();
+    activeTasks.forEach(t => {
+      const rid = String(t.assignedResource);
+      if (!byResource.has(rid)) byResource.set(rid, []);
+      byResource.get(rid).push(t);
+    });
+    const withTasks = resources.map(r => ({
+      ...r,
+      activeTasks: byResource.get(String(r._id)) || [],
+    }));
+    return res.json(withTasks);
+  } catch {
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.stopResource = async (req, res) => {
+  try {
+    const { resourceId, reason } = req.body || {};
+    if (!resourceId) return res.status(400).json({ msg: "resourceId required" });
+    const resource = await Resource.findById(resourceId);
+    if (!resource) return res.status(404).json({ msg: "Resource not found" });
+    if (resource.status === "busy") {
+      return res.status(400).json({ msg: "Cannot stop sharing while resource is assigned to an active task" });
+    }
+    if (resource.status === "stopped") {
+      return res.status(400).json({ msg: "Resource sharing is already stopped" });
+    }
+    resource.status = "stopped";
+    resource.stoppedReason = reason || "Stopped by admin";
+    resource.stoppedBy = req.user.id;
+    await resource.save();
+    await addLog("warn", "resource", `Admin stopped sharing resource ${resourceId}`, { resourceId, reason });
+    return res.json({ msg: "Sharing stopped", resource });
+  } catch {
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.resumeResource = async (req, res) => {
+  try {
+    const { resourceId } = req.body || {};
+    if (!resourceId) return res.status(400).json({ msg: "resourceId required" });
+    const resource = await Resource.findById(resourceId);
+    if (!resource) return res.status(404).json({ msg: "Resource not found" });
+    if (resource.status === "busy") {
+      return res.status(400).json({ msg: "Cannot resume while resource is busy" });
+    }
+    if (resource.status !== "stopped") {
+      return res.status(400).json({ msg: "Only stopped listings can be resumed" });
+    }
+    resource.status = "available";
+    resource.stoppedReason = "";
+    resource.stoppedBy = null;
+    await resource.save();
+    await addLog("info", "resource", `Admin resumed sharing resource ${resourceId}`, { resourceId });
+    return res.json({ msg: "Sharing resumed", resource });
+  } catch {
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.deleteResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resource = await Resource.findById(id);
+    if (!resource) return res.status(404).json({ msg: "Resource not found" });
+    if (resource.status === "busy") {
+      return res.status(400).json({ msg: "Cannot delete while resource is assigned to an active task" });
+    }
+    await Resource.findByIdAndDelete(id);
+    await addLog("error", "resource", `Admin deleted resource listing ${id}`, { resourceId: id });
+    return res.json({ msg: "Resource deleted" });
   } catch {
     return res.status(500).json({ msg: "Server error" });
   }

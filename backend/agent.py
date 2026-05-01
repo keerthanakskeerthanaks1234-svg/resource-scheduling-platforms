@@ -11,7 +11,7 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:5000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:3001")
 REGISTER_INTERVAL = 30
 
 

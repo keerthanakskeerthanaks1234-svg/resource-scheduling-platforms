@@ -6,7 +6,9 @@ const resourceSchema = new mongoose.Schema(
     cpu: { type: Number, required: true },
     ram: { type: Number, required: true },
     battery: { type: Number, required: true },
-    status: { type: String, enum: ["available", "busy"], default: "available" },
+    status: { type: String, enum: ["available", "busy", "stopped"], default: "available" },
+    stoppedReason: { type: String, default: "" },
+    stoppedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );

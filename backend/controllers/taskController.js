@@ -22,7 +22,8 @@ function runPythonCode(code) {
     let stderr = "";
     let timedOut = false;
 
-    const proc = spawn("python3", [tmpFile], {
+    const pythonBin = process.env.PYTHON_BIN || "python";
+    const proc = spawn(pythonBin, [tmpFile], {
       env: { ...process.env, PYTHONUNBUFFERED: "1" },
     });
 

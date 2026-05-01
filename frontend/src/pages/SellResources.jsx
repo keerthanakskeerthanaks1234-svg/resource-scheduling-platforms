@@ -156,8 +156,14 @@ export default function SellResources({
                                         </p>
                                     </div>
 
-                                    <span className="px-3 py-1 text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-xl">
-                                        Shared
+                                    <span className={`px-3 py-1 text-xs font-semibold rounded-xl ${
+                                        listing.status === 'stopped'
+                                            ? 'text-slate-600 bg-slate-100'
+                                            : listing.status === 'busy'
+                                                ? 'text-amber-700 bg-amber-50'
+                                                : 'text-indigo-600 bg-indigo-50'
+                                    }`}>
+                                        {listing.status === 'stopped' ? 'Stopped (admin)' : listing.status === 'busy' ? 'In use' : 'Shared'}
                                     </span>
                                 </div>
                             ))}
