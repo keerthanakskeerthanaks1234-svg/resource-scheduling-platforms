@@ -164,7 +164,7 @@ export default function Dashboard({
             <Card title="System Usage Analytics">
 
                 <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <LineChart data={monitorData}>
 
                             <CartesianGrid strokeDasharray="3 3" />

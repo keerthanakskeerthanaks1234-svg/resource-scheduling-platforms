@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, Users, Server, CheckCircle, XCircle, Cpu, Database, Activity } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import Navbar from './pages/Navbar';
@@ -107,8 +107,9 @@ export default function App() {
   const [listings, setListings] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [monitorData] = useState([]);
+  const [monitorData, setMonitorData] = useState([]);
   const [adminStats, setAdminStats] = useState(null);
+  const pollRef = useRef(null);
 
   const authFetch = async (url, options = {}) => {
     const token = user?.token;
@@ -121,6 +122,35 @@ export default function App() {
       throw new Error('Unauthorized');
     }
     return response;
+  };
+
+  const fetchSystemResources = async () => {
+    try {
+      const res = await fetch('/api/system-resources');
+      if (!res.ok) return;
+      const raw = await res.json();
+
+      const ramTotal = typeof raw.ram?.total === 'number' ? `${raw.ram.total} GB` : (raw.ram?.total || '0 GB');
+      const ramAvail = typeof raw.ram?.available === 'number' ? `${raw.ram.available} GB` : (raw.ram?.available || '0 GB');
+      const storTotal = typeof raw.storage?.total === 'number' ? `${raw.storage.total} GB` : (raw.storage?.total || 'N/A');
+      const storAvail = typeof raw.storage?.available === 'number' ? `${raw.storage.available} GB` : (raw.storage?.available || 'N/A');
+
+      const formatted = {
+        ...raw,
+        ram: { ...raw.ram, total: ramTotal, available: ramAvail },
+        storage: { ...raw.storage, total: storTotal, available: storAvail },
+      };
+
+      setResources(formatted);
+
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const cpuPct = Math.round(parseFloat(raw.cpu?.usage || 0) * 100);
+      const ramPct = Math.round(raw.ram?.usagePercent || 0);
+      setMonitorData(prev => [...prev, { time: timeLabel, cpu: cpuPct, ram: ramPct }].slice(-20));
+    } catch (err) {
+      console.error('System resources fetch failed:', err);
+    }
   };
 
   const navByRole = {
@@ -190,11 +220,18 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      clearInterval(pollRef.current);
+      return;
+    }
     setActiveTab('dashboard');
     fetchResources();
     fetchListings();
     fetchBookings();
+    fetchSystemResources();
+    clearInterval(pollRef.current);
+    pollRef.current = setInterval(fetchSystemResources, 10000);
+    return () => clearInterval(pollRef.current);
   }, [user]);
 
   const handleBook = async (listingId, hours) => {
@@ -260,7 +297,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <span className="text-sm text-slate-500">Role: <b className="text-indigo-600">{user.role}</b></span>
             <button
-              onClick={() => { fetchResources(); fetchListings(); fetchBookings(); }}
+              onClick={() => { fetchResources(); fetchListings(); fetchBookings(); fetchSystemResources(); }}
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
             >
