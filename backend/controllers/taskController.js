@@ -5,6 +5,11 @@ const os = require("node:os");
 const Resource = require("../models/Resource");
 const Task = require("../models/Task");
 const Node = require("../models/Node");
+const Log = require("../models/Log");
+
+async function addLog(level, category, message, meta = {}) {
+  try { await Log.create({ level, category, message, meta }); } catch (_) {}
+}
 
 const EXECUTION_TIMEOUT_MS = 30000;
 
@@ -98,6 +103,12 @@ exports.executeTask = async (req, res) => {
     task.completedAt = new Date();
     await task.save();
 
+    if (result.success) {
+      await addLog("info", "task", `Task ${task._id} completed successfully`, { taskId: String(task._id), buyer: req.user.id, language: lang });
+    } else {
+      await addLog("error", "task", `Task ${task._id} failed: ${result.output.slice(0, 200)}`, { taskId: String(task._id), buyer: req.user.id });
+    }
+
     if (resource) { resource.status = "available"; await resource.save(); }
     if (node) { node.status = "available"; await node.save(); }
 
@@ -171,3 +182,12 @@ exports.getTaskById = async (req, res) => {
     return res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Re-export logging helper for use in admin controller
+async function logEvent(level, category, message, meta) {
+  try {
+    const Log = require("../models/Log");
+    await Log.create({ level, category, message, meta: meta || {} });
+  } catch (_) {}
+}
+exports.logEvent = logEvent;

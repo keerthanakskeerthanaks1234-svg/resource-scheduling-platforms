@@ -29,6 +29,8 @@ const nodeSchema = new mongoose.Schema(
     },
     lastSeen: { type: Date, default: Date.now },
     ipAddress: { type: String, default: "" },
+    isDisabled: { type: Boolean, default: false },
+    disabledReason: { type: String, default: "" },
   },
   { timestamps: true }
 );

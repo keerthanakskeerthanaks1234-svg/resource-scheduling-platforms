@@ -15,7 +15,7 @@ A MERN-based platform where users share or rent compute resources. A Python agen
        ├── /api/node       (agent registration, listing)
        ├── /api/resource   (seller shares CPU/RAM)
        ├── /api/task       (buyer submits/executes tasks)
-       └── /api/admin      (analytics, logs)
+       └── /api/admin      (dashboard, nodes CRUD, users CRUD, tasks, logs, analytics, alerts)
        |
        v (spawns)
 [agent.py Flask :5001]    (psutil — CPU/RAM/Battery/Disk)
@@ -82,12 +82,13 @@ backend/
     resourceController.js Seller resource sharing
     taskController.js   Task execution engine (child_process)
     nodeController.js   Node registration + stats
-    adminController.js  Full monitoring dashboard
+    adminController.js  Full CRUD admin — dashboard, nodes, users, tasks, logs, analytics, alerts
   models/
-    User.js     (seller/buyer/admin)
+    User.js     (seller/buyer/admin, isBlocked)
     Resource.js (cpu/ram/battery/status)
     Task.js     (code/output/language/status)
-    Node.js     (hostname/cpu/ram/battery/status/lastSeen)
+    Node.js     (hostname/cpu/ram/battery/status/lastSeen/isDisabled)
+    Log.js      (level/category/message/meta, timestamps)
   routes/
     authRoutes.js, resourceRoutes.js, taskRoutes.js,
     nodeRoutes.js, adminRoutes.js
@@ -102,7 +103,20 @@ frontend/src/
     ZeppelinNotebook.jsx Real Python execution notebook
     MyBookings.jsx      Buyer task history
     Navbar.jsx          Sidebar nav + logout
+    AdminDashboard.jsx  6-tab admin panel (overview/nodes/users/tasks/logs/analytics)
 ```
+
+## Admin Module
+The Admin Module (AdminDashboard.jsx) provides a 6-tab control panel:
+- **Overview**: stat cards (users, nodes, tasks, running/failed/completed), active alerts, recent task log
+- **Nodes**: full node table with disable / enable / mark-offline actions per node
+- **Users**: user table with block/unblock, role promotion (buyer/seller/admin), delete actions
+- **Tasks**: complete task log with cancel (running/pending) + retry (failed with code) + view output
+- **Logs**: real-time searchable log viewer (filter by level + category), terminal-style dark theme
+- **Analytics**: bar chart (CPU/RAM/battery per node) + 12h line chart (tasks/completed/failed per hour)
+
+**Default test admin**: register with `role: "admin"` at `/api/auth/register` (role field accepted).
+**Seeded test account**: `superadmin@rn.com` / `Admin@123` (admin role)
 
 ## Data Flow
 Agent → Backend → MongoDB → Scheduler → Execution Engine → Output → Notebook UI

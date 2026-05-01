@@ -1,0 +1,137 @@
+I am building a MERN stack distributed resource sharing platform.
+
+I need to implement a powerful ADMIN MODULE with full control over the system.
+
+Project context:
+- Users can be Sellers (share resources) or Buyers (request resources and run tasks)
+- Each seller runs a Python agent that sends CPU, RAM, battery status
+- Tasks are assigned to available nodes and executed
+- MongoDB Atlas is used as the database
+
+Now build a COMPLETE ADMIN SYSTEM with the following features:
+
+========================
+ADMIN FEATURES REQUIRED
+========================
+
+1. SYSTEM DASHBOARD
+- Total users count
+- Total active nodes
+- Total available vs busy nodes
+- Total tasks (running, completed, failed)
+- Total revenue generated (optional placeholder)
+- Real-time system status
+
+2. NODE MANAGEMENT
+- View all nodes in a table
+- Show:
+  - IP address
+  - RAM available
+  - CPU cores
+  - Battery %
+  - Status (AVAILABLE / BUSY / OFFLINE)
+- Ability to:
+  - Disable a node
+  - Force stop a node
+  - Mark node as offline
+
+3. USER MANAGEMENT
+- View all users
+- Show:
+  - Name, Email, Role (Admin/Seller/Buyer)
+- Actions:
+  - Block user
+  - Delete user
+  - Change role
+
+4. TASK MONITORING
+- View all tasks
+- Show:
+  - Task ID
+  - Buyer
+  - Assigned Node
+  - Status (Pending/Running/Completed/Failed)
+  - Execution time
+- Actions:
+  - Cancel running task
+  - Retry failed task
+
+5. LOGGING SYSTEM
+- Maintain logs for:
+  - Task execution
+  - Node registration
+  - Errors
+- Store logs in MongoDB
+- Show logs in admin dashboard
+
+6. ALERT SYSTEM
+- Show alerts when:
+  - Node battery < 15%
+  - Node goes offline
+  - Task fails
+- Display alerts in admin UI
+
+7. ANALYTICS
+- Graphs for:
+  - CPU usage across nodes
+  - RAM usage trends
+  - Tasks per hour
+- Use simple chart library (Recharts)
+
+8. SECURITY CONTROLS
+- Only admin can access admin routes
+- Use middleware for role-based authentication
+
+========================
+BACKEND REQUIREMENTS
+========================
+
+Create:
+- Admin routes (/api/admin)
+- Controllers for all above features
+- MongoDB models:
+  - User
+  - Node
+  - Task
+  - Logs
+
+Implement:
+- GET /admin/dashboard
+- GET /admin/nodes
+- GET /admin/users
+- GET /admin/tasks
+- POST /admin/node/disable
+- POST /admin/task/cancel
+- GET /admin/logs
+
+========================
+FRONTEND REQUIREMENTS
+========================
+
+Create Admin Dashboard UI with:
+- Cards for system stats
+- Tables for:
+  - Nodes
+  - Users
+  - Tasks
+- Graphs (CPU, RAM, tasks)
+- Alert section
+
+Use React + Tailwind styling
+
+========================
+IMPORTANT LOGIC
+========================
+
+- If battery < 15%, node should be marked UNAVAILABLE automatically
+- Admin override should be possible
+- Tasks should be reassigned if node fails
+
+========================
+GOAL
+========================
+
+Build a production-level admin control panel for a distributed computing system.
+
+Make the UI clean, modern, and interactive.
+Make backend scalable and modular.

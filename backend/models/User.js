@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       default: "buyer",
       required: true,
     },
+    isBlocked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
