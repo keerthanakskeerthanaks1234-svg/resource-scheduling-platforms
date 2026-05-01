@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* Remove browser's built-in password eye icon */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
+input::-webkit-credentials-auto-fill-button {
+    display: none;
+}

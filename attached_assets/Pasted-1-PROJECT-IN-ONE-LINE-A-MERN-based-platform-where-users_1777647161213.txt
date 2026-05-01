@@ -1,0 +1,170 @@
+1) PROJECT IN ONE LINE
+
+A MERN-based platform where users share or rent compute resources, with a Python agent reporting node health, a scheduler allocating tasks, and a notebook UI to submit and view results.
+
+🧩 2) SYSTEM ARCHITECTURE (HIGH-LEVEL)
+5
+[React Frontend]
+   │
+   ▼
+[Node/Express API] ───► [MongoDB Atlas]
+   │
+   ├── /auth (login, roles)
+   ├── /node (agent registration)
+   ├── /tasks (submit/execute)
+   └── /admin (analytics)
+   │
+   ▼
+[Execution Engine]
+   │
+   ▼
+[Worker Nodes (Users running agent.py)]
+👥 3) USER ROLES & WHAT THEY DO
+🔵 Seller (Provider)
+Runs agent.py
+Shares CPU/RAM
+Stops sharing if battery < 15%
+🟢 Buyer (Requester)
+Opens dashboard
+Uses notebook (Zeppelin-like)
+Submits tasks
+🟡 Admin
+Monitors:
+total nodes
+running tasks
+completed jobs
+🔄 4) COMPLETE WORKFLOW (END-TO-END)
+🔹 STEP 1 — USER LOGIN
+User → Login → Role assigned → Dashboard loaded
+🔹 STEP 2 — NODE REGISTRATION (AGENT)
+agent.py runs
+   ↓
+Collects CPU, RAM, Battery
+   ↓
+POST /api/node/register
+   ↓
+MongoDB stores node
+
+✔ If battery < 15% → rejected
+✔ Status = AVAILABLE
+
+🔹 STEP 3 — RESOURCE POOL
+All nodes → Stored in DB
+           ↓
+     Resource Pool
+🔹 STEP 4 — BUYER REQUEST
+Buyer → Notebook UI
+       ↓
+Write code + required RAM
+       ↓
+POST /api/tasks/run
+🔹 STEP 5 — SCHEDULER (CORE LOGIC)
+Backend:
+Find node where:
+  RAM >= required
+  battery >= 15
+  status = AVAILABLE
+🔹 STEP 6 — TASK EXECUTION
+Assign node
+   ↓
+Run code (Python executor)
+   ↓
+Store output in DB
+   ↓
+Return result
+🔹 STEP 7 — OUTPUT DISPLAY
+Frontend:
+Notebook shows output
+User can download results
+🔹 STEP 8 — TASK COMPLETION
+Task status → completed
+Node → AVAILABLE again
+Logs saved
+⚙️ 5) MODULE BREAKDOWN (ERP STYLE)
+🔹 1. Authentication Module
+Login / Register
+Role-based routing
+🔹 2. Resource Monitoring Module
+agent.py collects:
+RAM
+CPU
+Battery
+🔹 3. Resource Sharing Module
+Seller shares resources
+Disabled if battery < 15%
+🔹 4. Resource Allocation Module (CORE)
+Select node dynamically
+Based on:
+RAM
+availability
+battery
+🔹 5. Task Execution Module
+Run Python code
+Return output
+🔹 6. Admin Monitoring Module
+Total users
+Nodes
+Tasks
+Logs
+🔋 6) BATTERY PROTECTION (IMPORTANT)
+
+You must explain this:
+
+Agent → stops sharing
+Backend → rejects node
+Frontend → disables UI
+
+👉 Triple safety system 🔥
+
+🧠 7) DATA FLOW (VERY IMPORTANT)
+Agent → Backend → DB → Scheduler → Execution → Output → UI
+🧪 8) COMPLETE FLOW DIAGRAM (WRITE IN DOC)
+User Login
+    ↓
+Role Selection
+    ↓
+Seller → Share Resources
+Buyer → Request Task
+    ↓
+Scheduler selects node
+    ↓
+Task executed
+    ↓
+Result returned
+    ↓
+Logs stored
+🧰 9) TECH STACK
+Frontend → React
+Backend → Node.js + Express
+Database → MongoDB Atlas
+Agent → Python (psutil)
+Execution → child_process (Python)
+🎯 10) WHAT YOU WILL DEMONSTRATE
+
+✔ Login system
+✔ Seller sharing resources
+✔ Buyer running task
+✔ Output in notebook
+✔ Admin monitoring
+
+🧠 11) KEY CONCEPT (VERY IMPORTANT FOR VIVA)
+
+“We are distributing computation, not combining memory.”
+
+🧠 12) STRONG DEFENSE ANSWER
+
+“The system follows a distributed architecture where nodes contribute resources via an agent. Tasks are scheduled dynamically based on resource availability and executed using a lightweight execution engine. Results are aggregated and displayed through a notebook interface.”
+
+🚀 13) DEVELOPMENT PLAN (STEP-BY-STEP)
+Day 1
+Backend APIs
+MongoDB setup
+Day 2
+Agent integration
+Node registration
+Day 3
+Frontend dashboards
+Day 4
+Task execution + notebook
+Day 5
+Admin panel + logs

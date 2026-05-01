@@ -1,0 +1,101 @@
+{
+  "users": [
+    {
+      "id": "usr_c5a9fb14-f1a3-4c69-a2ca-09825158567f",
+      "name": "Seller One",
+      "email": "seller@test.com",
+      "passwordHash": "$2b$10$By9r9lwegaxCYNyq4oQ/reTvzr6R.8Zhw5jnhbJug/XfHDYUFQPUq",
+      "role": "seller",
+      "createdAt": "2026-04-24T03:34:16.928Z",
+      "updatedAt": "2026-04-24T03:34:16.928Z"
+    },
+    {
+      "id": "usr_0e9a1acd-b302-4aeb-9510-0686048c4f35",
+      "name": "Buyer One",
+      "email": "buyer@test.com",
+      "passwordHash": "$2b$10$Pn2gKTPyL2tiaoIUrx7dKO9LrKcEviJP0r7NGZIGcfCgaL1vK3i9S",
+      "role": "buyer",
+      "createdAt": "2026-04-24T03:35:15.264Z",
+      "updatedAt": "2026-04-24T03:35:15.264Z"
+    },
+    {
+      "id": "usr_bab0ab08-4bd1-4b67-bbab-0480f066ae62",
+      "name": "Admin One",
+      "email": "admin@test.com",
+      "passwordHash": "$2b$10$k52nHdUcDnD3CYh6hMick.MKsu52yGqSQnk2OSvbwlkaKeekYM72u",
+      "role": "admin",
+      "createdAt": "2026-04-24T03:35:28.823Z",
+      "updatedAt": "2026-04-24T03:35:28.823Z"
+    },
+    {
+      "id": "usr_b945c7a5-46f9-4ae0-b1a4-06e2c0fe951a",
+      "name": "Admin",
+      "email": "admin@resourcescheduler.com",
+      "passwordHash": "$2b$10$rSjCZpyYA4CVXFekxJxRO.Qj0BsmiQOM0w3zdDu9bwD6HPcCuUFha",
+      "role": "admin",
+      "createdAt": "2026-04-24T04:01:37.106Z",
+      "updatedAt": "2026-04-24T04:01:37.106Z"
+    },
+    {
+      "id": "usr_9a18052b-ec29-41cc-82b0-636c0e2aa0e4",
+      "name": "koushik",
+      "email": "labdbms556@gmail.com",
+      "passwordHash": "$2b$10$vhsYl.53wSvigGdVgxM7yufD8yYDVOg6lcYPU5aIqaGJ4kNojAi8K",
+      "role": "buyer",
+      "createdAt": "2026-04-24T04:08:15.143Z",
+      "updatedAt": "2026-04-24T04:08:15.143Z"
+    },
+    {
+      "id": "usr_da191a6a-80f0-4a56-b3e9-5902dde15bd8",
+      "name": "Admin",
+      "email": "admin@resourceschedule.com",
+      "passwordHash": "$2b$10$x8o9kbmit2Z75Vn2sNCQ/OGq9Zhbvns.ny8fLnmgVUyrkR0xe0iy6",
+      "role": "seller",
+      "createdAt": "2026-04-24T05:19:44.118Z",
+      "updatedAt": "2026-04-24T05:19:44.118Z"
+    }
+  ],
+  "resources": [
+    {
+      "id": "res_01daf221-3e3a-455a-8786-f51840942a18",
+      "userId": "usr_c5a9fb14-f1a3-4c69-a2ca-09825158567f",
+      "cpu": 4,
+      "ram": 8,
+      "battery": 80,
+      "status": "busy",
+      "createdAt": "2026-04-24T03:34:55.803Z",
+      "updatedAt": "2026-04-24T03:35:15.437Z"
+    },
+    {
+      "id": "res_4f7fd84f-0988-4367-a740-8e2d5cad3877",
+      "userId": "usr_da191a6a-80f0-4a56-b3e9-5902dde15bd8",
+      "cpu": 1,
+      "ram": 1,
+      "battery": 16,
+      "status": "available",
+      "createdAt": "2026-04-24T05:20:03.525Z",
+      "updatedAt": "2026-04-24T05:20:03.525Z"
+    },
+    {
+      "id": "res_713a2e13-51c4-42d9-98bc-cf31df7d5351",
+      "userId": "usr_da191a6a-80f0-4a56-b3e9-5902dde15bd8",
+      "cpu": 1,
+      "ram": 1,
+      "battery": 16,
+      "status": "available",
+      "createdAt": "2026-04-24T05:20:08.283Z",
+      "updatedAt": "2026-04-24T05:20:08.283Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "tsk_0b1005e5-7a15-47e4-8783-8085325c0a6f",
+      "buyerId": "usr_0e9a1acd-b302-4aeb-9510-0686048c4f35",
+      "requiredRam": 4,
+      "status": "running",
+      "assignedResourceId": "res_01daf221-3e3a-455a-8786-f51840942a18",
+      "createdAt": "2026-04-24T03:35:15.440Z",
+      "updatedAt": "2026-04-24T03:35:15.440Z"
+    }
+  ]
+}
