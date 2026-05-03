@@ -14,8 +14,7 @@ Copy or create `backend/.env` (this file is gitignored):
 
 | Variable | Example | Purpose |
 |----------|---------|---------|
-| `PORT` | `3001` | Express API port |
-| `JWT_SECRET` | strong random string | JWT signing |
+| `PORT` | `3001` | Express API port
 | `MONGO_URI` | `mongodb+srv://...` | Database |
 | `CORS_ORIGIN` | `http://localhost:5000,http://localhost:5173` | Allowed browser origins |
 | `AGENT_PORT` | `5001` | Python agent HTTP port |
